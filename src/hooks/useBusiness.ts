@@ -1,12 +1,12 @@
 import { createClient } from '@/lib/supabase/client'
-
-let cachedBusinessId: string | null = null
+import { useRef } from 'react'
 
 export function useBusinessId() {
   const supabase = createClient()
-  
+  const cachedBusinessId = useRef<string | null>(null)
+
   const getBusinessId = async (): Promise<string | null> => {
-    if (cachedBusinessId) return cachedBusinessId
+    if (cachedBusinessId.current) return cachedBusinessId.current
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return null
@@ -17,12 +17,12 @@ export function useBusinessId() {
       .eq('id', user.id)
       .single()
 
-    cachedBusinessId = profile?.business_id || null
-    return cachedBusinessId
+    cachedBusinessId.current = profile?.business_id || null
+    return cachedBusinessId.current
   }
 
   const clearCache = () => {
-    cachedBusinessId = null
+    cachedBusinessId.current = null
   }
 
   return { getBusinessId, clearCache }
